@@ -46,13 +46,13 @@
       "orbiting_body": "Venus"
     },
     {
-      "close_approach_date": "1972-11-08",
-      "close_approach_date_full": "1972-Nov-08 08:41",
-      "epoch_date_close_approach": 90060060000,
+      "close_approach_date": "2022-10-26",
+      "close_approach_date_full": "2022-Oct-26 02:06",
+      "epoch_date_close_approach": 1666745703522,
       "relative_velocity": {
-        "kilometers_per_second": "17.6983110044",
-        "kilometers_per_hour": "63713.9196157943",
-        "miles_per_hour": "39589.351885714"
+        "kilometers_per_second": "7.346100139",
+        "kilometers_per_hour": "26445.9605004117",
+        "miles_per_hour": "16432.4914009364"
       },
       "miss_distance": {
         "astronomical": "0.4976576591",

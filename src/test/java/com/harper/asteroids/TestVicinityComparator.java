@@ -26,8 +26,8 @@ public class TestVicinityComparator {
     public void testOrder() {
         VicinityComparator comparator = new VicinityComparator();
 
-        assertThat(comparator.compare(neo1, neo2), greaterThan(0));
-        assertThat(comparator.compare(neo2, neo1), lessThan(0));
-        assertEquals(comparator.compare(neo1, neo1), 0);
+        assertThat(comparator.compare(neo2, neo1), greaterThan(0));
+        assertThat(comparator.compare(neo1, neo2), lessThan(0));
+        assertEquals(comparator.compare(neo2, neo2), 0);
     }
 }
