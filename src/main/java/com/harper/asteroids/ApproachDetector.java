@@ -5,12 +5,13 @@ import com.harper.asteroids.model.NearEarthObject;
 import com.harper.asteroids.service.util.DateUtil;
 import com.harper.asteroids.service.util.ServiceConstants;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,25 +37,30 @@ public class ApproachDetector<apiKey> {
      * @param limit - number of asteroids details to be returned
      */
     public List<NearEarthObject> getClosestApproaches(List<String> nearEarthObjectIds, int limit) {
-        List<NearEarthObject> neos = new ArrayList<>(limit);
-        for(String id: nearEarthObjectIds) {
-            try {
-                System.out.println("Check passing of object " + id);
-                Response response = client
-                    .target(ServiceConstants.NASA_API_URL).path("neo").path(id)
+        List<NearEarthObject> neos = nearEarthObjectIds.stream().parallel()
+                .map(this::getNeoDetail)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        System.out.println("Received " + neos.size() + " neos, now sorting");
+        return getClosest(neos, limit);
+    }
+
+    private NearEarthObject getNeoDetail(String neoId) {
+        System.out.println("Check passing of object " + neoId);
+        NearEarthObject neo = null;
+
+        try {
+            Response response = client
+                    .target(ServiceConstants.NASA_API_URL).path("neo").path(neoId)
                     .queryParam("api_key", this.apiKey)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-                NearEarthObject neo = mapper.readValue(response.readEntity(String.class), NearEarthObject.class);
-                neos.add(neo);
-            } catch (IOException e) {
-                System.err.println("Failed scanning for asteroids: " + e);
-            }
+            neo = mapper.readValue(response.readEntity(String.class), NearEarthObject.class);
+        } catch (IOException | ProcessingException e) {
+            System.err.println("Failed scanning for asteroids: " + e);
         }
-        System.out.println("Received " + neos.size() + " neos, now sorting");
-
-        return getClosest(neos, limit);
+        return neo;
     }
 
     /**
@@ -66,14 +72,14 @@ public class ApproachDetector<apiKey> {
     public List<NearEarthObject> getClosest(List<NearEarthObject> neos, int limit) {
         //TODO: Should ignore the passes that are not today/this week.
         return neos.stream()
-                .filter(this::isApproachingComingCurrentWeek)
+                .filter(this::isApproachingComingWeek)
                 .sorted(new VicinityComparator())
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    private boolean isApproachingComingCurrentWeek(NearEarthObject neo) {
-        if(neo.getCloseApproachData() == null) {
+    private boolean isApproachingComingWeek(NearEarthObject neo) {
+        if (neo.getCloseApproachData() == null) {
             return false;
         }
 
