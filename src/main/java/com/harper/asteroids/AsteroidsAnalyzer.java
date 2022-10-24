@@ -62,7 +62,7 @@ public class AsteroidsAnalyzer {
         LocalDate today = LocalDate.now();
         Response response = client
                 .target(ServiceConstants.NASA_API_URL).path("feed")
-                .queryParam("start_date",  LocalDate.now())
+                .queryParam("start_date",  DateUtil.getStartDateOfCurrentWeek())
                 .queryParam("end_date", DateUtil.getEndDateOfCurrentWeek())
                 .queryParam("api_key", this.apiKey)
                 .request(MediaType.APPLICATION_JSON)
