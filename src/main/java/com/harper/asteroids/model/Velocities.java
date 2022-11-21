@@ -1,7 +1,8 @@
 package com.harper.asteroids.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Velocities {
     @JsonProperty("kilometers_per_second")
     double kilometersPerSecond;

@@ -3,106 +3,84 @@
  */
 package com.harper.asteroids;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harper.asteroids.model.CloseApproachData;
 import com.harper.asteroids.model.Feed;
 import com.harper.asteroids.model.NearEarthObject;
-import org.glassfish.jersey.client.ClientConfig;
+import com.harper.asteroids.neo.NeoException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
-import java.io.IOException;
-
-import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Main app. Gets the list of closest asteroids from NASA at
- * https://api.nasa.gov/neo/rest/v1/feed?start_date=START_DATE&end_date=END_DATE&api_key=API_KEY
- * See documentation on the Asteroids - NeoWs API at https://api.nasa.gov/
- *
+ * <a
+ * href="https://api.nasa.gov/neo/rest/v1/feed?start_date=START_DATE&end_date=END_DATE&api_key=API_KEY">...</a>
+ * See documentation on the Asteroids - NeoWs API at <a href="https://api.nasa.gov/">...</a>
+ * <p>
  * Prints the 10 closest
- *
- * Risk of getting throttled if we don't sign up for own key on https://api.nasa.gov/
- * Set environment variable 'API_KEY' to override.
+ * <p>
+ * Risk of getting throttled if we don't sign up for own key on <a
+ * href="https://api.nasa.gov/">...</a> Set environment variable 'API_KEY' to override.
  */
 public class App {
 
-    private static final String NEO_FEED_URL = "https://api.nasa.gov/neo/rest/v1/feed";
+    private static final Logger LOG = LoggerFactory.getLogger(App.class);
+    private final ApproachDetector approachDetector = new ApproachDetector();
 
-    protected static String API_KEY = "DEMO_KEY";
+    private List<NearEarthObject> neos;
 
-    private Client client;
-
-    private ObjectMapper mapper = new ObjectMapper();
-
-    public App() {
-
-
-        ClientConfig configuration = new ClientConfig();
-        client = ClientBuilder.newClient(configuration);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
-
-    /**
-     * Scan space for asteroids close to earth
-     */
-    private void checkForAsteroids() {
-        LocalDate today = LocalDate.now();
-        Response response = client
-                .target(NEO_FEED_URL)
-                .queryParam("start_date",  today.toString())
-                .queryParam("end_date", today.toString())
-                .queryParam("api_key", API_KEY)
-                .request(MediaType.APPLICATION_JSON)
-                .get();
-        System.out.println("Got response: " + response);
-        if(response.getStatus() == Response.Status.OK.getStatusCode()) {
-            ObjectMapper mapper = new ObjectMapper();
-            String content = response.readEntity(String.class);
-
-
-            try {
-                Feed neoFeed = mapper.readValue(content, Feed.class);
-                ApproachDetector approachDetector = new ApproachDetector(neoFeed.getAllObjectIds());
-
-                List<NearEarthObject> closest =  approachDetector.getClosestApproaches(10);
-                System.out.println("Hazard?   Distance(km)    When                             Name");
-                System.out.println("----------------------------------------------------------------------");
-                for(NearEarthObject neo: closest) {
-                    Optional<CloseApproachData> closestPass = neo.getCloseApproachData().stream()
-                            .min(Comparator.comparing(CloseApproachData::getMissDistance));
-
-                    if(closestPass.isEmpty()) continue;
-
-                    System.out.println(String.format("%s       %12.3f  %s    %s",
-                            (neo.isPotentiallyHazardous() ? "!!!" : " - "),
-                            closestPass.get().getMissDistance().getKilometers(),
-                            closestPass.get().getCloseApproachDateTime(),
-                            neo.getName()
-                            ));
-                }
-            } catch (IOException e) {
-                System.err.println("Failed scanning for asteroids: " + e);
-            }
-        }
-        else {
-            System.err.println("Failed querying feed, got " + response.getStatus() + " " + response.getStatusInfo());
-        }
-
-    }
-
-
-    public static void main(String[] args) {
-        String apiKey = System.getenv("API_KEY");
-        if(apiKey != null && !apiKey.isBlank()) {
-            API_KEY = apiKey;
-        }
+    public static void main(String[] args) throws NeoException {
         new App().checkForAsteroids();
+    }
+
+    private void checkForAsteroids() throws NeoException {
+        Feed neoFeed = approachDetector.getFeedMapping();
+        neos = approachDetector.getClosestApproaches(neoFeed);
+        displayClosestPassingNextWeek();
+    }
+
+    private void displayClosestPassingNextWeek() {
+        Date today = new Date();
+        Calendar c = GregorianCalendar.getInstance();
+        c.add(Calendar.DATE, 7);
+        Date afterWeek = c.getTime();
+
+        List<CloseApproachData> closestPassingList = approachDetector.getClosest(neos, today,
+            afterWeek);
+
+        if (closestPassingList != null && !closestPassingList.isEmpty()) {
+            System.out.println("Hazard?    When                             Distance(km)     Name");
+            System.out.println("----------------------------------------------------------------------");
+
+            for (CloseApproachData closestPass : closestPassingList) {
+                Optional<NearEarthObject> sortedNeos = getNeoByClosetPassing(closestPass);
+                if (sortedNeos.isEmpty()) {
+                    continue;
+                }
+
+                System.out.printf("%s  %s        %12.3f     %s%n",
+                    (sortedNeos.get().isPotentiallyHazardous() ? "!!!" : " - "),
+                    closestPass.getCloseApproachDateTime(),
+                    closestPass.getMissDistance().getKilometers(),
+                    sortedNeos.get().getName());
+            }
+            LOG.info("Displayed closest approaches with asteroids information in this week");
+        } else {
+            LOG.warn("No asteroids are approaching to the earth in this week");
+            System.out.println("No asteroids are approaching to the earth in this week");
+        }
+    }
+
+    private Optional<NearEarthObject> getNeoByClosetPassing(CloseApproachData closestPass) {
+        return neos.stream().
+            filter(neo -> neo.getCloseApproachData().stream()
+                .anyMatch(closestPass::equals))
+            .toList().stream().findAny();
     }
 }

@@ -284,8 +284,8 @@
       "orbiting_body": "Earth"
     },
     {
-      "close_approach_date": "2028-12-23",
-      "close_approach_date_full": "2028-Dec-23 11:43",
+      "close_approach_date": "2022-11-23",
+      "close_approach_date_full": "2022-Nov-23 11:43",
       "epoch_date_close_approach": 1861184580000,
       "relative_velocity": {
         "kilometers_per_second": "4.5198113906",
@@ -297,6 +297,23 @@
         "lunar": "13.6818350625",
         "kilometers": "5261628.234039375",
         "miles": "3269424.179418375"
+      },
+      "orbiting_body": "Earth"
+    },
+    {
+      "close_approach_date": "2022-11-25",
+      "close_approach_date_full": "2022-Nov-25 11:21",
+      "epoch_date_close_approach": 186118458000,
+      "relative_velocity": {
+        "kilometers_per_second": "2.5198113906",
+        "kilometers_per_hour": "6271.3210063335",
+        "miles_per_hour": "0110.3660997409"
+      },
+      "miss_distance": {
+        "astronomical": "1.0351718125",
+        "lunar": "23.6818350625",
+        "kilometers": "4261628.234039375",
+        "miles": "269424.179418375"
       },
       "orbiting_body": "Earth"
     },

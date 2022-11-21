@@ -1,7 +1,11 @@
 package com.harper.asteroids;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.harper.asteroids.model.CloseApproachData;
 import com.harper.asteroids.model.NearEarthObject;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,7 +16,8 @@ import static org.junit.Assert.assertEquals;
 
 public class TestApproachDetector {
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final ApproachDetector approachDetector = new ApproachDetector();
     private NearEarthObject neo1, neo2;
 
     @Before
@@ -23,15 +28,23 @@ public class TestApproachDetector {
     }
 
     @Test
-    public void testFiltering() {
-
+    public void testFiltering() throws ParseException {
         List<NearEarthObject> neos = List.of(neo1, neo2);
-        List<NearEarthObject> filtered = ApproachDetector.getClosest(neos, 1);
-        //Neo2 has the closest passing at 5261628 kms away.
-        // TODO: Neo2's closest passing is in 2028.
-        // In Jan 202, neo1 is closer (5390966 km, vs neo2's at 7644137 km)
-        assertEquals(1, filtered.size());
-        assertEquals(neo2, filtered.get(0));
+
+        String sDate1="2022-Nov-21 11:56";
+        Date startDate =new SimpleDateFormat("yyyy-MMM-dd hh:mm").parse(sDate1);
+        String sDate2="2022-Nov-28 11:56";
+        Date endDate =new SimpleDateFormat("yyyy-MMM-dd hh:mm").parse(sDate2);
+
+        List<CloseApproachData> filtered = approachDetector.getClosest(neos, startDate, endDate);
+
+        assertEquals(2, filtered.size());
+
+        assertEquals("Wed Nov 23 12:43:00 CET 2022",
+            filtered.get(0).getCloseApproachDateTime().toString());
+
+        assertEquals("Fri Nov 25 01:00:00 CET 2022",
+            filtered.get(1).getCloseApproachDate().toString());
 
     }
 }
