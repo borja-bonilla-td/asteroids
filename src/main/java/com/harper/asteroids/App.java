@@ -7,6 +7,7 @@ import com.harper.asteroids.model.CloseApproachData;
 import com.harper.asteroids.model.Feed;
 import com.harper.asteroids.model.NearEarthObject;
 import com.harper.asteroids.neo.NeoException;
+import com.harper.asteroids.neo.NeoUtility;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * href="https://api.nasa.gov/">...</a> Set environment variable 'API_KEY' to override.
  */
 public class App {
-
+    private static final int LIMIT = 10;
     private static final Logger LOG = LoggerFactory.getLogger(App.class);
     private final ApproachDetector approachDetector = new ApproachDetector();
 
@@ -51,8 +52,8 @@ public class App {
         c.add(Calendar.DATE, 7);
         Date afterWeek = c.getTime();
 
-        List<CloseApproachData> closestPassingList = approachDetector.getClosest(neos, today,
-            afterWeek);
+        List<CloseApproachData> closestPassingList = NeoUtility.getClosest(neos, today,
+            afterWeek,LIMIT);
 
         if (closestPassingList != null && !closestPassingList.isEmpty()) {
             System.out.println("Hazard?    When                             Distance(km)     Name");
