@@ -65,7 +65,7 @@ public class NeoClient {
         getFeedApiQueryParams(today, api_key));
   }
 
-  public String getFeedApiQueryParams(String today, String api_key) {
+  private String getFeedApiQueryParams(String today, String api_key) {
     return String.format(FEED_API_QUERY_PARAMS, today, today, api_key);
   }
 }

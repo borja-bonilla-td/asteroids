@@ -6,16 +6,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Distances{
 
-    @JsonProperty("astronomical")
+
     private Double astronomical;
 
-    @JsonProperty("lunar")
     private Double lunar;
 
-    @JsonProperty("kilometers")
     private Double kilometers;
 
-    @JsonProperty("miles")
     private Double miles;
 
     public Double getAstronomical() {

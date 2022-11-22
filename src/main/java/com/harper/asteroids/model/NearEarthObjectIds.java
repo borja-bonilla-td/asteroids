@@ -6,9 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NearEarthObjectIds {
 
-    @JsonProperty("id")
+
     private String id;
-    @JsonProperty("name")
     private String name;
 
     public String getId() {

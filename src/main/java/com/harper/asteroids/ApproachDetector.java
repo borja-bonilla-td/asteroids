@@ -1,11 +1,13 @@
 package com.harper.asteroids;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.harper.asteroids.model.Feed;
 import com.harper.asteroids.model.NearEarthObject;
 
 import com.harper.asteroids.neo.NeoClient;
 import com.harper.asteroids.neo.NeoException;
 import com.harper.asteroids.neo.NeoMapper;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -15,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.ws.rs.NotFoundException;
 
 /**
  * Receives a set of neo ids and rates them after earth proximity. Retrieves the approach data for
@@ -25,7 +28,7 @@ import java.util.stream.Collectors;
 public class ApproachDetector {
     private final NeoClient client = new NeoClient();
     private final NeoMapper mapper = new NeoMapper();
-    List<NearEarthObject> neos = new ArrayList<>();
+    private List<NearEarthObject> neos = new ArrayList<>();
 
 
     public Feed getFeedMapping() throws NeoException {
@@ -46,13 +49,13 @@ public class ApproachDetector {
                             try {
                                 return client.getNeoDetails(id);
                             } catch (NeoException e) {
-                                throw new RuntimeException(e);
+                                throw new NotFoundException(e);
                             }
                         }, executor).thenApply(neo -> {
                             try {
                                 return mapper.readNeo(neo);
                             } catch (NeoException e) {
-                                throw new RuntimeException(e);
+                                throw new IllegalArgumentException(e);
                             }
                         }).get();
                     } catch (InterruptedException | ExecutionException e) {

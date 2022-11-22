@@ -8,9 +8,8 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NearEarthObject {
 
-    @JsonProperty("id")
     private String id;
-    @JsonProperty("name")
+
     private String name;
     @JsonProperty("nasa_jpl_url")
     private String nplUrl;

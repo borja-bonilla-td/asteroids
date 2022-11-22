@@ -1,7 +1,6 @@
 package com.harper.asteroids.neo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harper.asteroids.model.Feed;
 import com.harper.asteroids.model.NearEarthObject;
